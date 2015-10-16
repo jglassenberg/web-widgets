@@ -1,0 +1,36 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+  
+<ModulePrefs title="GalaxyZoo" title_url="http://www.galaxyzoo.com" description="GalaxyZoo Widget" author="Jeremy Glassenberg" author_email="GoogleGadgets@jeremyglassenberg.com" author_location="Pittsburgh, PA" author_affiliation="Tepper MBA 2008 Candidate" screenshot="http://skyservice.pha.jhu.edu/dr6/ImgCutout/getjpeg.aspx?ra=322.09897687645798000000&dec=-0.06572892321433400000&scale=0.1063549181200423325471698112&opt=&width=424&height=423&version=2" thumbnail="http://www.galaxyzoo.org/images/concept3c1.jpg" height="400" width="400"/>
+
+<Content type="html"><![CDATA[
+  
+<div id="content_div"></div>  
+<script type="text/javascript"> 
+  
+  var url = "http://www.galaxyzoo.org/GalaxyAnalysis.aspx"; 
+
+ _IG_FetchXmlContent(url, function (response) {
+          //alert(response.firstChild);
+           /*if (response == null || typeof(response) != "object" || 
+                      response.firstChild == null) {*/
+          if (response == null){
+              _gel("content_div").innerHTML = "<i>Invalid data.</i>";
+              return;
+           }
+           var startText = response.indexOf("content1")+10; 
+           var endText = response.indexOf("<p />");
+  
+           var html = response.substr(startText, endText - startText);
+           //alert(html);          
+           
+           _gel("content_div").innerHTML = html;
+  
+  
+           });
+           
+           </script>
+]]>
+</Content>
+</Module>
