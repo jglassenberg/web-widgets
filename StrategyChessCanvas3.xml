@@ -1,0 +1,1988 @@
+
+<?xml version="1.0" encoding="UTF-8" ?> 
+<Module>
+  <ModulePrefs title="Strategy Chess" directory_title="Strategy Chess" title_url="http://www.jeremyglassenberg.com/StrategyChess" 
+    description="Classic stratego-like board game.  Play against 4 levels of difficulty." 
+    author="Jeremy Glassenberg" author_email="GoogleGadgets@jeremyglassenberg.com" author_affiliation="MBA Candidate 2008" author_location="Pittsburgh, PA" 
+    screenshot="http://www.jeremyglassenberg.com/StrategyChessScrn2.png" thumbnail="http://www.jeremyglassenberg.com/StrategyChess.gif" 
+    height="220" width="320" scaling="true" scrolling="false" singleton="true"
+    author_photo="http://www.jeremyglassenberg.com/me_thumbnail.jpg" 
+    author_aboutme="I am currently an MBA student at Carnegie Mellon University. I have a B.S. Degree in Computer Science from UIUC. Prior to grad school, I interned at Salesforce.com, Microsoft, Northwestern University, and Technion." 
+    author_link="http://www.jeremyglassenberg.com" author_quote="'Come on, guys. If we don't try now, we'll never know how horribly they can beat us. That's the sort of thing that can haunt you.' -Homer J. Simpson" 
+  >
+  <Require feature="views" /> 
+  <Require feature="grid"/>
+  <Require feature="minimessage"/>
+  <Require feature="analytics" />  
+</ModulePrefs>
+
+  <Content type="html" view="canvas">
+  <![CDATA[ 
+  
+  <table bgcolor="#FFFFFF" width="100%"> <!-- bgcolor="#20FF9A" -->
+<tr>
+    <td width="25%"><span id="game_status"><font style='font-size:150%'>Begin!</font></span></td>
+    <td width="25%"><span id="num_turns_header"><font style='font-size:150%'>Turns: </font></span><span id="num_turns"></span></td>
+    <td width="15%"><span id="score_header"><font style='font-size:150%'>Score:</font></span></td>
+    <td width="35%"><span id="log_header"><font style='font-size:150%'>Log:</font></span></td>
+  </tr>
+  <tr>
+    <td bgcolor="#FFE4B5" colspan="2" width="44%"><span id="grid_table"></span></td>
+    <td width="10%"><span id="score_display"></span></td>
+    <td width="31%"><span id="move_log"></span></td>
+    <td width="15%">
+        <script type="text/javascript">
+          <!--
+//google_ad_client = "pub-8220250523327935";
+/* 120x90, created 8/23/09 */
+//google_ad_slot = "8123477089";
+//google_ad_width = 120;
+//google_ad_height = 90;
+google_ad_client = "pub-8220250523327935";
+/* 120x240, StrategyChess */
+google_ad_slot = "8121820230";
+google_ad_width = 120;
+google_ad_height = 240;
+//-->
+</script>
+<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</td>
+  </tr>
+  <tr>
+    <td colspan="1" width="25%"><span id="move_header"><!--Move: --></span></td>
+    <td width="25%"><span id="start_notify"></span><span id="sdat"></span></td>
+    <td width="15%"><span id="quit_notify"></span></td>
+    <td width="35%"><span id="unknown_td"><a href="http://www.jeremyglassenberg.com/strategychessigoogleinstructions" target="_blank"><font style='font-size:150%'>Help</font></a></span></td>
+  </tr>
+</table>
+<script type="text/javascript"><!--
+google_ad_client = "pub-8220250523327935";
+/* StrategyChess */
+google_ad_slot = "1444951395";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+
+<script language="Javascript" id="ResizeHandler">
+ _IG_Analytics("UA-693552-1", "/WebWidgets/StrategyChess");
+
+
+  function DifficultyLevelOptionsString(){
+
+   
+     var html = "Level:<br/>";
+     html += "<select name='Difficulty' onchange='SetDifficulty(this.value)'>";
+     html += "<option value='0' "+ ((difficultyLevel == 0) ? "selected='selected'" : "") +">Easy</option>";
+     html += "<option value='1' "+ ((difficultyLevel == 1) ? "selected='selected'" : "" )+">Normal</option>";
+     html  +="<option value='2' "+ ((difficultyLevel == 2) ? "selected='selected'" : "" )+">Hard</option>";
+     html  +="<option value='3' "+ ((difficultyLevel == 3) ? "selected='selected'" : "") +">Brutal</option>";
+     html+="</select>";
+  
+    return html;
+  }
+</script>
+
+<script type="text/javascript" id="logHelper">
+  var msg = new _IG_MiniMessage(__MODULE_ID__, _gel("move_log"));
+  var endGameMsg = null;
+  function DisplayLog(source, target){ 
+   
+    var div = document.createElement("div");
+    div.innerHTML = '<span style="' + GetStyle(source) + '">'+GetLog(source)+'</span>' + '->' + '<span style="'+GetStyle(target)+'">'+GetLog(target)+'</span>';
+	div.style.backgroundColor = "tan";
+    
+    msg.createTimerMessage(div, 6);
+  }
+  
+  function DisplayWarning(text, isTimed){
+  
+  }
+  
+  function DisplayButton(text, func, div_source){
+    
+    var a = document.createElement("button");
+                                                                             
+    a.onclick=new Function(func+"()");
+
+    a.innerHTML=text;
+ 
+    _gel(div_source).innerHTML = "";
+    _gel(div_source).appendChild(a);
+  
+  }
+</script>  
+  
+<script language="JavaScript" id="Start_helper">
+  var isSetup = true;
+  var difficultyLevel=1;
+  
+  function DisplaySetup(){
+    isSetup = true;
+    playerTurn = 0;
+    totalTurns = 0;
+    gameOver = false;
+    msg.dismissMessage(endGameMsg);
+    endGameMsg = null;
+    humanSetup = -1;
+
+    for(var i = 0; i<6; i++){
+       for (var j = 0; j < 10; j++){
+         board[j][i] = 0;
+         backend.data[i*10+j]=0;
+       }
+    }
+    for(var i = 6; i<10; i++){
+       for (var j = 0; j < 10; j++){
+         board[j][i] = (i-6)*10 + j + 1;
+         backend.data[i*10+j]=board[j][i];
+       }
+    }
+    DisplayButton("Start", "StartGame", "start_notify");
+    DisplayButton("Auto-setup", "OneClickSetup", "quit_notify");
+    
+    _gel("game_status").innerHTML = "<font style='font-size:170%'>Setup</font>"; 
+    _gel("move_log").innerHTML = "<font style='font-size:110%; color:blue;'>Move your pieces onto the white spaces to setup your board,<br/> or press 'Auto-start' for a pre-set board.<br/><br/>  Then press 'Start' when ready.</font>"; 
+    _gel("num_turns_header").innerHTML = "";
+    _gel("num_turns").innerHTML = "";
+    _gel("score_header").innerHTML = "";
+    _gel("log_header").innerHTML = "";
+    _gel("score_display").innerHTML = DifficultyLevelOptionsString();
+    if(typeof(myUnits) == 'object') backend._IGG_refreshAll();
+  }
+  
+  function isValidSetup(){
+	//Go through the 4 setup rows, make sure each cell is filled.
+	for(var i = 2; i < 6; i++){
+		for (var j = 0; j < 10; j++){
+			if (board[j][i] == 0) return false;
+		}
+	}
+	return true;
+  };
+  
+  function OneClickSetup(){
+    loadUnits();
+    for (var i = 0; i < 40; i++){
+      var x = playerUnits[i].x;
+      var y = playerUnits[i].y;
+      board[x][y-4] = playerUnits[i].value+1;
+      backend.data[(y-4)*10+x] = board[x][y-4];
+      
+      board[(i+60)%10][Math.floor((i+60)/10)] = 0;
+      backend.data[i+60] = 0;
+    }
+    backend._IGG_refreshAll();
+  }
+  
+  function StartGame(){
+    if(!isValidSetup()){
+      
+      msg.createTimerMessage("<font style='font-size:150%'>You must fill the board with all pieces</font>",3);
+    }
+    else{
+      isSetup = false;
+  
+  DisplayButton("Quit", "QuitGameNotify", "quit_notify");
+  document.getElementById("start_notify").innerHTML = "";
+  document.getElementById("move_log").innerHTML = "";
+  document.getElementById("game_status").innerHTML = "<font style='font-size:150%'>Begin!</font>"; 
+  document.getElementById("num_turns_header").innerHTML = "<font style='font-size:150%'>Turn:</font>";
+  document.getElementById("score_header").innerHTML = "<font style='font-size:150%'>Opponent's Remaining Units</font>";
+  document.getElementById("log_header").innerHTML = "<font style='font-size:150%'>Moves</font>";
+ 
+    
+      for (var i = 2; i < 6; i++){
+        //getting board ready before human player setup
+        for (var j = 0; j < 10; j++){
+          board[j][i+4] = board[j][i];
+          backend.data[(i+4)*10+j] = board[j][i+4];
+          board[j][i] = 0;
+          backend.data[(i)*10+j] = 0;
+        
+        }
+      }
+      SetupComputerPlayer();
+      SetupHumanPlayer();
+      SetMyVisibility();
+      printScore();
+      
+      backend._IGG_refreshAll();
+      TestCanMove();
+      //get board ready
+    }
+  }
+      
+  function QuitGameNotify(){
+    DisplaySetup();
+  }
+  </script>
+  
+<script language="JavaScript" id="PlayerSetup">
+
+var playerUnits; //An array of the units stored by the computer player
+var numSetups = 12; //Change this if you are adding setups!
+
+
+function getUnits(){
+	return playerUnits;
+};
+
+
+function soldierBasic(num){
+	this.value = num; //This determines the type of unit-general, mine, spy, etc.
+	this.x = -1; //Current location on the board.
+	this.y = -1;
+	this.setSoldierPos = setSoldierPos;
+};
+
+
+function setSoldierPos(x,y){
+	this.x = x;
+	this.y = y;
+};
+
+  var humanSetup = -1;
+
+function loadUnits(){
+	playerUnits = new Array(40);
+	for (var i = 0; i < 40; i++){
+		playerUnits[i] = new soldierBasic(i);
+	}
+	
+	var setupChoice = Math.floor(Math.random ( ) * numSetups);
+	while (humanSetup == setupChoice) setupChoice = Math.floor(Math.random ( ) * numSetups);	
+	//can make this more generic
+	switch (setupChoice) {
+		case 0:
+			loadMinesDistrib();	
+			break;
+		case 1:
+			manTheBarricades();	
+			break;
+		case 2:
+			BomBarrier();	
+			break;
+		case 3:
+			B29();	
+			break;
+		case 4:
+			MineTrap();	
+			break;
+		case 5:
+			AggresiveTraps();	
+			break;
+		case 6:
+			ShorelineBluff2();
+			break;
+		case 7:
+			ManTheBarricades2();
+			break;
+		case 8:
+			EarlyWarning();
+			break;
+		case 9:
+			EarlyWarning();
+			break;
+		case 10:
+			CycloneDefense();
+			break;
+		case 11:
+			TempestDefense();
+			break;
+	}
+	//half the time, reverse the locations of all pieces
+	if (Math.floor(Math.random ( ) * 2)==0) FlipPlayerUnits();
+         humanSetup = setupChoice;
+};
+
+function FlipPlayerUnits(){
+	for (var i = 0; i < 40; i++){
+		playerUnits[i].x = 9 - playerUnits[i].x;
+	}
+};
+
+
+function manTheBarricades(){
+	playerUnits[39].setSoldierPos(9,9);
+	playerUnits[38].setSoldierPos(9,7);
+	playerUnits[37].setSoldierPos(8,7);
+	playerUnits[36].setSoldierPos(5,7);
+	playerUnits[35].setSoldierPos(4,7);
+	playerUnits[34].setSoldierPos(1,7);
+	playerUnits[33].setSoldierPos(0,7);
+	playerUnits[32].setSoldierPos(7,9);
+	playerUnits[31].setSoldierPos(5,9);
+	playerUnits[30].setSoldierPos(3,9);
+	playerUnits[29].setSoldierPos(0,9);
+	playerUnits[28].setSoldierPos(1,8);
+	playerUnits[27].setSoldierPos(5,6);
+	playerUnits[26].setSoldierPos(4,6);
+	playerUnits[25].setSoldierPos(1,6);
+	playerUnits[24].setSoldierPos(4,9);
+	playerUnits[23].setSoldierPos(1,9);
+	playerUnits[22].setSoldierPos(6,8);
+	playerUnits[21].setSoldierPos(3,8);
+	playerUnits[20].setSoldierPos(0,8);
+	playerUnits[19].setSoldierPos(6,9);
+	playerUnits[18].setSoldierPos(9,8);
+	playerUnits[17].setSoldierPos(8,8);
+	playerUnits[16].setSoldierPos(4,8);
+	playerUnits[15].setSoldierPos(5,8);
+	playerUnits[14].setSoldierPos(7,7);
+	playerUnits[13].setSoldierPos(8,6);
+	playerUnits[12].setSoldierPos(2,6);
+	playerUnits[11].setSoldierPos(7,8);
+	playerUnits[10].setSoldierPos(2,8);
+	playerUnits[9].setSoldierPos(7,6);
+	playerUnits[8].setSoldierPos(0,6);
+	playerUnits[7].setSoldierPos(6,7);
+	playerUnits[6].setSoldierPos(3,7);
+	playerUnits[5].setSoldierPos(9,6);
+	playerUnits[4].setSoldierPos(2,9);
+	playerUnits[3].setSoldierPos(3,6);
+	playerUnits[2].setSoldierPos(6,6);
+	playerUnits[1].setSoldierPos(8,9);
+	playerUnits[0].setSoldierPos(2,7);
+};
+
+function loadMinesDistrib(){
+	playerUnits[39].setSoldierPos(9,9);
+	playerUnits[38].setSoldierPos(8,9);
+	playerUnits[37].setSoldierPos(5,9);
+	playerUnits[36].setSoldierPos(9,8);
+	playerUnits[35].setSoldierPos(4,8);
+	playerUnits[34].setSoldierPos(5,6);
+	playerUnits[33].setSoldierPos(4,6);
+	playerUnits[32].setSoldierPos(1,9);
+	playerUnits[31].setSoldierPos(7,8);
+	playerUnits[30].setSoldierPos(2,8);
+	playerUnits[29].setSoldierPos(0,8);
+	playerUnits[28].setSoldierPos(8,7);
+	playerUnits[27].setSoldierPos(6,7);
+	playerUnits[26].setSoldierPos(3,7);
+	playerUnits[25].setSoldierPos(1,7);
+	playerUnits[24].setSoldierPos(6,9);
+	playerUnits[23].setSoldierPos(3,9);
+	playerUnits[22].setSoldierPos(1,8);
+	playerUnits[21].setSoldierPos(7,6);
+	playerUnits[20].setSoldierPos(2,6);
+	playerUnits[19].setSoldierPos(3,6);
+	playerUnits[18].setSoldierPos(6,6);
+	playerUnits[17].setSoldierPos(5,8);
+	playerUnits[16].setSoldierPos(4,9);
+	playerUnits[15].setSoldierPos(4,7);
+	playerUnits[14].setSoldierPos(6,8);
+	playerUnits[13].setSoldierPos(0,9);
+	playerUnits[12].setSoldierPos(7,9);
+	playerUnits[11].setSoldierPos(5,7);
+	playerUnits[10].setSoldierPos(3,8);
+	playerUnits[9].setSoldierPos(8,8);
+	playerUnits[8].setSoldierPos(2,9);
+	playerUnits[7].setSoldierPos(1,6);
+	playerUnits[6].setSoldierPos(8,6);
+	playerUnits[5].setSoldierPos(9,7);
+	playerUnits[4].setSoldierPos(2,7);
+	playerUnits[3].setSoldierPos(7,7);
+	playerUnits[2].setSoldierPos(0,6);
+	playerUnits[1].setSoldierPos(9,6);
+	playerUnits[0].setSoldierPos(0,7);
+};
+
+
+function BomBarrier(){
+	playerUnits[39].setSoldierPos(9,9);
+	playerUnits[38].setSoldierPos(6,6);
+	playerUnits[37].setSoldierPos(5,7);
+	playerUnits[36].setSoldierPos(4,8);
+	playerUnits[35].setSoldierPos(9,8);
+	playerUnits[34].setSoldierPos(3,9);
+	playerUnits[33].setSoldierPos(8,9);
+	playerUnits[32].setSoldierPos(2,6);
+	playerUnits[31].setSoldierPos(3,6);
+	playerUnits[30].setSoldierPos(8,6);
+	playerUnits[29].setSoldierPos(1,7);
+	playerUnits[28].setSoldierPos(3,7);
+	playerUnits[27].setSoldierPos(7,7);
+	playerUnits[26].setSoldierPos(0,8);
+	playerUnits[25].setSoldierPos(1,9);
+	playerUnits[24].setSoldierPos(0,7);
+	playerUnits[23].setSoldierPos(3,8);
+	playerUnits[22].setSoldierPos(8,8);
+	playerUnits[21].setSoldierPos(2,9);
+	playerUnits[20].setSoldierPos(6,9);
+	playerUnits[19].setSoldierPos(0,6);
+	playerUnits[18].setSoldierPos(1,6);
+	playerUnits[17].setSoldierPos(4,6);
+	playerUnits[16].setSoldierPos(5,6);
+	playerUnits[15].setSoldierPos(2,7);
+	playerUnits[14].setSoldierPos(4,7);
+	playerUnits[13].setSoldierPos(1,8);
+	playerUnits[12].setSoldierPos(0,9);
+	playerUnits[11].setSoldierPos(9,6);
+	playerUnits[10].setSoldierPos(2,8);
+	playerUnits[9].setSoldierPos(5,8);
+	playerUnits[8].setSoldierPos(4,9);
+	playerUnits[7].setSoldierPos(6,8);
+	playerUnits[6].setSoldierPos(5,9);
+	playerUnits[5].setSoldierPos(7,9);
+	playerUnits[4].setSoldierPos(6,7);
+	playerUnits[3].setSoldierPos(9,7);
+	playerUnits[2].setSoldierPos(7,6);
+	playerUnits[1].setSoldierPos(8,7);
+	playerUnits[0].setSoldierPos(7,8);
+};
+
+function B29(){
+	playerUnits[39].setSoldierPos(9,9);
+	playerUnits[38].setSoldierPos(0,6);
+	playerUnits[37].setSoldierPos(9,6);
+	playerUnits[36].setSoldierPos(2,7);
+	playerUnits[35].setSoldierPos(7,7);
+	playerUnits[34].setSoldierPos(9,8);
+	playerUnits[33].setSoldierPos(8,9);
+	playerUnits[32].setSoldierPos(6,6);
+	playerUnits[31].setSoldierPos(3,7);
+	playerUnits[30].setSoldierPos(4,7);
+	playerUnits[29].setSoldierPos(0,8);
+	playerUnits[28].setSoldierPos(3,8);
+	playerUnits[27].setSoldierPos(0,9);
+	playerUnits[26].setSoldierPos(2,9);
+	playerUnits[25].setSoldierPos(3,9);
+	playerUnits[24].setSoldierPos(6,8);
+	playerUnits[23].setSoldierPos(7,8);
+	playerUnits[22].setSoldierPos(5,9);
+	playerUnits[21].setSoldierPos(6,9);
+	playerUnits[20].setSoldierPos(7,9);
+	playerUnits[19].setSoldierPos(3,6);
+	playerUnits[18].setSoldierPos(5,6);
+	playerUnits[17].setSoldierPos(5,7);
+	playerUnits[16].setSoldierPos(1,8);
+	playerUnits[15].setSoldierPos(1,6);
+	playerUnits[14].setSoldierPos(2,6);
+	playerUnits[13].setSoldierPos(4,6);
+	playerUnits[12].setSoldierPos(1,7);
+	playerUnits[11].setSoldierPos(0,7);
+	playerUnits[10].setSoldierPos(6,7);
+	playerUnits[9].setSoldierPos(1,9);
+	playerUnits[8].setSoldierPos(4,9);
+	playerUnits[7].setSoldierPos(2,8);
+	playerUnits[6].setSoldierPos(4,8);
+	playerUnits[5].setSoldierPos(8,8);
+	playerUnits[4].setSoldierPos(9,7);
+	playerUnits[3].setSoldierPos(5,8);
+	playerUnits[2].setSoldierPos(8,6);
+	playerUnits[1].setSoldierPos(7,6);
+	playerUnits[0].setSoldierPos(8,7);
+};
+
+function MineTrap(){
+	playerUnits[39].setSoldierPos(9,9);
+	playerUnits[38].setSoldierPos(9,6);
+	playerUnits[37].setSoldierPos(8,7);
+	playerUnits[36].setSoldierPos(7,8);
+	playerUnits[35].setSoldierPos(9,8);
+	playerUnits[34].setSoldierPos(6,9);
+	playerUnits[33].setSoldierPos(8,9);
+	playerUnits[32].setSoldierPos(1,6);
+	playerUnits[31].setSoldierPos(5,6);
+	playerUnits[30].setSoldierPos(0,7);
+	playerUnits[29].setSoldierPos(2,7);
+	playerUnits[28].setSoldierPos(3,7);
+	playerUnits[27].setSoldierPos(1,8);
+	playerUnits[26].setSoldierPos(5,8);
+	playerUnits[25].setSoldierPos(6,8);
+	playerUnits[24].setSoldierPos(3,6);
+	playerUnits[23].setSoldierPos(7,7);
+	playerUnits[22].setSoldierPos(2,9);
+	playerUnits[21].setSoldierPos(3,9);
+	playerUnits[20].setSoldierPos(4,9);
+	playerUnits[19].setSoldierPos(9,7);
+	playerUnits[18].setSoldierPos(3,8);
+	playerUnits[17].setSoldierPos(8,8);
+	playerUnits[16].setSoldierPos(7,9);
+	playerUnits[15].setSoldierPos(0,6);
+	playerUnits[14].setSoldierPos(4,6);
+	playerUnits[13].setSoldierPos(4,8);
+	playerUnits[12].setSoldierPos(1,9);
+	playerUnits[11].setSoldierPos(6,7);
+	playerUnits[10].setSoldierPos(0,8);
+	playerUnits[9].setSoldierPos(2,8);
+	playerUnits[8].setSoldierPos(5,9);
+	playerUnits[7].setSoldierPos(1,7);
+	playerUnits[6].setSoldierPos(5,7);
+	playerUnits[5].setSoldierPos(0,9);
+	playerUnits[4].setSoldierPos(2,6);
+	playerUnits[3].setSoldierPos(6,6);
+	playerUnits[2].setSoldierPos(8,6);
+	playerUnits[1].setSoldierPos(4,7);
+	playerUnits[0].setSoldierPos(7,6);
+};
+
+function AggresiveTraps(){
+	playerUnits[39].setSoldierPos(9,9);
+	playerUnits[38].setSoldierPos(0,6);
+	playerUnits[37].setSoldierPos(1,6);
+	playerUnits[36].setSoldierPos(4,6);
+	playerUnits[35].setSoldierPos(5,6);
+	playerUnits[34].setSoldierPos(9,8);
+	playerUnits[33].setSoldierPos(8,9);
+	playerUnits[32].setSoldierPos(8,6);
+	playerUnits[31].setSoldierPos(9,6);
+	playerUnits[30].setSoldierPos(2,9);
+	playerUnits[29].setSoldierPos(3,9);
+	playerUnits[28].setSoldierPos(4,9);
+	playerUnits[27].setSoldierPos(5,9);
+	playerUnits[26].setSoldierPos(6,9);
+	playerUnits[25].setSoldierPos(7,9);
+	playerUnits[24].setSoldierPos(7,6);
+	playerUnits[23].setSoldierPos(6,7);
+	playerUnits[22].setSoldierPos(5,8);
+	playerUnits[21].setSoldierPos(6,8);
+	playerUnits[20].setSoldierPos(1,9);
+	playerUnits[19].setSoldierPos(2,6);
+	playerUnits[18].setSoldierPos(3,6);
+	playerUnits[17].setSoldierPos(0,7);
+	playerUnits[16].setSoldierPos(0,9);
+	playerUnits[15].setSoldierPos(0,8);
+	playerUnits[14].setSoldierPos(1,8);
+	playerUnits[13].setSoldierPos(2,8);
+	playerUnits[12].setSoldierPos(7,8);
+	playerUnits[11].setSoldierPos(2,7);
+	playerUnits[10].setSoldierPos(3,7);
+	playerUnits[9].setSoldierPos(5,7);
+	playerUnits[8].setSoldierPos(3,8);
+	playerUnits[7].setSoldierPos(6,6);
+	playerUnits[6].setSoldierPos(1,7);
+	playerUnits[5].setSoldierPos(4,8);
+	playerUnits[4].setSoldierPos(4,7);
+	playerUnits[3].setSoldierPos(8,7);
+	playerUnits[2].setSoldierPos(9,7);
+	playerUnits[1].setSoldierPos(8,8);
+	playerUnits[0].setSoldierPos(7,7);
+};
+
+function ShorelineBluff2(){
+	playerUnits[39].setSoldierPos(6,6);
+	playerUnits[38].setSoldierPos(4,6);
+	playerUnits[37].setSoldierPos(5,6);
+	playerUnits[36].setSoldierPos(7,6);
+	playerUnits[35].setSoldierPos(3,7);
+	playerUnits[34].setSoldierPos(6,7);
+	playerUnits[33].setSoldierPos(2,9);
+	playerUnits[32].setSoldierPos(0,6);
+	playerUnits[31].setSoldierPos(1,6);
+	playerUnits[30].setSoldierPos(2,6);
+	playerUnits[29].setSoldierPos(8,6);
+	playerUnits[28].setSoldierPos(9,6);
+	playerUnits[27].setSoldierPos(2,8);
+	playerUnits[26].setSoldierPos(5,9);
+	playerUnits[25].setSoldierPos(9,9);
+	playerUnits[24].setSoldierPos(2,7);
+	playerUnits[23].setSoldierPos(4,8);
+	playerUnits[22].setSoldierPos(5,8);
+	playerUnits[21].setSoldierPos(0,9);
+	playerUnits[20].setSoldierPos(7,9);
+	playerUnits[19].setSoldierPos(3,6);
+	playerUnits[18].setSoldierPos(8,8);
+	playerUnits[17].setSoldierPos(3,9);
+	playerUnits[16].setSoldierPos(8,9);
+	playerUnits[15].setSoldierPos(0,8);
+	playerUnits[14].setSoldierPos(9,8);
+	playerUnits[13].setSoldierPos(1,9);
+	playerUnits[12].setSoldierPos(6,9);
+	playerUnits[11].setSoldierPos(1,8);
+	playerUnits[10].setSoldierPos(3,8);
+	playerUnits[9].setSoldierPos(6,8);
+	playerUnits[8].setSoldierPos(7,8);
+	playerUnits[7].setSoldierPos(4,7);
+	playerUnits[6].setSoldierPos(0,7);
+	playerUnits[5].setSoldierPos(9,7);
+	playerUnits[4].setSoldierPos(1,7);
+	playerUnits[3].setSoldierPos(7,7);
+	playerUnits[2].setSoldierPos(8,7);
+	playerUnits[1].setSoldierPos(5,7);
+	playerUnits[0].setSoldierPos(4,9);
+};
+
+function ManTheBarricades2(){
+	playerUnits[39].setSoldierPos(9,9);
+	playerUnits[38].setSoldierPos(0,7);
+	playerUnits[37].setSoldierPos(1,7);
+	playerUnits[36].setSoldierPos(4,7);
+	playerUnits[35].setSoldierPos(5,7);
+	playerUnits[34].setSoldierPos(8,7);
+	playerUnits[33].setSoldierPos(9,7);
+	playerUnits[32].setSoldierPos(3,8);
+	playerUnits[31].setSoldierPos(4,6);
+	playerUnits[30].setSoldierPos(0,8);
+	playerUnits[29].setSoldierPos(1,8);
+	playerUnits[28].setSoldierPos(2,9);
+	playerUnits[27].setSoldierPos(4,9);
+	playerUnits[26].setSoldierPos(5,9);
+	playerUnits[25].setSoldierPos(6,9);
+	playerUnits[24].setSoldierPos(0,6);
+	playerUnits[23].setSoldierPos(8,6);
+	playerUnits[22].setSoldierPos(4,8);
+	playerUnits[21].setSoldierPos(0,9);
+	playerUnits[20].setSoldierPos(1,9);
+	playerUnits[19].setSoldierPos(1,6);
+	playerUnits[18].setSoldierPos(5,6);
+	playerUnits[17].setSoldierPos(9,6);
+	playerUnits[16].setSoldierPos(6,8);
+	playerUnits[15].setSoldierPos(3,6);
+	playerUnits[14].setSoldierPos(7,6);
+	playerUnits[13].setSoldierPos(9,8);
+	playerUnits[12].setSoldierPos(3,9);
+	playerUnits[11].setSoldierPos(2,8);
+	playerUnits[10].setSoldierPos(5,8);
+	playerUnits[9].setSoldierPos(7,8);
+	playerUnits[8].setSoldierPos(7,9);
+	playerUnits[7].setSoldierPos(2,6);
+	playerUnits[6].setSoldierPos(6,6);
+	playerUnits[5].setSoldierPos(8,9);
+	playerUnits[4].setSoldierPos(3,7);
+	playerUnits[3].setSoldierPos(6,7);
+	playerUnits[2].setSoldierPos(2,7);
+	playerUnits[1].setSoldierPos(7,7);
+	playerUnits[0].setSoldierPos(8,8);
+};
+
+function EarlyWarning(){
+	playerUnits[39].setSoldierPos(6,9);
+	playerUnits[38].setSoldierPos(4,6);
+	playerUnits[37].setSoldierPos(8,7);
+	playerUnits[36].setSoldierPos(6,8);
+	playerUnits[35].setSoldierPos(8,8);
+	playerUnits[34].setSoldierPos(5,9);
+	playerUnits[33].setSoldierPos(7,9);
+	playerUnits[32].setSoldierPos(0,7);
+	playerUnits[31].setSoldierPos(0,6);
+	playerUnits[30].setSoldierPos(3,6);
+	playerUnits[29].setSoldierPos(5,6);
+	playerUnits[28].setSoldierPos(6,6);
+	playerUnits[27].setSoldierPos(9,6);
+	playerUnits[26].setSoldierPos(3,8);
+	playerUnits[25].setSoldierPos(9,9);
+	playerUnits[24].setSoldierPos(0,9);
+	playerUnits[23].setSoldierPos(1,7);
+	playerUnits[22].setSoldierPos(1,8);
+	playerUnits[21].setSoldierPos(5,8);
+	playerUnits[20].setSoldierPos(4,9);
+	playerUnits[19].setSoldierPos(8,6);
+	playerUnits[18].setSoldierPos(5,7);
+	playerUnits[17].setSoldierPos(4,8);
+	playerUnits[16].setSoldierPos(8,9);
+	playerUnits[15].setSoldierPos(1,6);
+	playerUnits[14].setSoldierPos(0,8);
+	playerUnits[13].setSoldierPos(7,8);
+	playerUnits[12].setSoldierPos(3,9);
+	playerUnits[11].setSoldierPos(9,8);
+	playerUnits[10].setSoldierPos(2,8);
+	playerUnits[9].setSoldierPos(1,9);
+	playerUnits[8].setSoldierPos(2,9);
+	playerUnits[7].setSoldierPos(3,7);
+	playerUnits[6].setSoldierPos(6,7);
+	playerUnits[5].setSoldierPos(9,7);
+	playerUnits[4].setSoldierPos(2,6);
+	playerUnits[3].setSoldierPos(4,7);
+	playerUnits[2].setSoldierPos(2,7);
+	playerUnits[1].setSoldierPos(7,6);
+	playerUnits[0].setSoldierPos(7,7);
+};
+
+function CycloneDefense(){
+	playerUnits[39].setSoldierPos(7,8);
+	playerUnits[38].setSoldierPos(0,6);
+	playerUnits[37].setSoldierPos(1,7);
+	playerUnits[36].setSoldierPos(7,7);
+	playerUnits[35].setSoldierPos(6,8);
+	playerUnits[34].setSoldierPos(8,8);
+	playerUnits[33].setSoldierPos(7,9);
+	playerUnits[32].setSoldierPos(6,6);
+	playerUnits[31].setSoldierPos(9,6);
+	playerUnits[30].setSoldierPos(2,6);
+	playerUnits[29].setSoldierPos(2,8);
+	playerUnits[28].setSoldierPos(0,9);
+	playerUnits[27].setSoldierPos(2,9);
+	playerUnits[26].setSoldierPos(4,9);
+	playerUnits[25].setSoldierPos(5,9);
+	playerUnits[24].setSoldierPos(7,6);
+	playerUnits[23].setSoldierPos(2,7);
+	playerUnits[22].setSoldierPos(3,7);
+	playerUnits[21].setSoldierPos(6,7);
+	playerUnits[20].setSoldierPos(5,8);
+	playerUnits[19].setSoldierPos(0,7);
+	playerUnits[18].setSoldierPos(1,8);
+	playerUnits[17].setSoldierPos(6,9);
+	playerUnits[16].setSoldierPos(8,9);
+	playerUnits[15].setSoldierPos(4,6);
+	playerUnits[14].setSoldierPos(3,8);
+	playerUnits[13].setSoldierPos(1,9);
+	playerUnits[12].setSoldierPos(3,9);
+	playerUnits[11].setSoldierPos(5,6);
+	playerUnits[10].setSoldierPos(4,7);
+	playerUnits[9].setSoldierPos(8,7);
+	playerUnits[8].setSoldierPos(0,8);
+	playerUnits[7].setSoldierPos(3,6);
+	playerUnits[6].setSoldierPos(8,6);
+	playerUnits[5].setSoldierPos(9,9);
+	playerUnits[4].setSoldierPos(1,6);
+	playerUnits[3].setSoldierPos(5,7);
+	playerUnits[2].setSoldierPos(4,8);
+	playerUnits[1].setSoldierPos(9,7);
+	playerUnits[0].setSoldierPos(9,8);
+};
+
+function WheelOfDanger(){
+	playerUnits[39].setSoldierPos(5,8);
+	playerUnits[38].setSoldierPos(2,7);
+	playerUnits[37].setSoldierPos(5,7);
+	playerUnits[36].setSoldierPos(8,7);
+	playerUnits[35].setSoldierPos(4,8);
+	playerUnits[34].setSoldierPos(6,8);
+	playerUnits[33].setSoldierPos(5,9);
+	playerUnits[32].setSoldierPos(0,6);
+	playerUnits[31].setSoldierPos(2,6);
+	playerUnits[30].setSoldierPos(4,6);
+	playerUnits[29].setSoldierPos(5,6);
+	playerUnits[28].setSoldierPos(8,6);
+	playerUnits[27].setSoldierPos(9,6);
+	playerUnits[26].setSoldierPos(1,9);
+	playerUnits[25].setSoldierPos(8,9);
+	playerUnits[24].setSoldierPos(1,6);
+	playerUnits[23].setSoldierPos(7,6);
+	playerUnits[22].setSoldierPos(2,8);
+	playerUnits[21].setSoldierPos(0,9);
+	playerUnits[20].setSoldierPos(6,9);
+	playerUnits[19].setSoldierPos(7,7);
+	playerUnits[18].setSoldierPos(1,8);
+	playerUnits[17].setSoldierPos(7,9);
+	playerUnits[16].setSoldierPos(9,9);
+	playerUnits[15].setSoldierPos(1,7);
+	playerUnits[14].setSoldierPos(4,7);
+	playerUnits[13].setSoldierPos(6,7);
+	playerUnits[12].setSoldierPos(9,7);
+	playerUnits[11].setSoldierPos(0,8);
+	playerUnits[10].setSoldierPos(3,7);
+	playerUnits[9].setSoldierPos(3,8);
+	playerUnits[8].setSoldierPos(9,8);
+	playerUnits[7].setSoldierPos(6,6);
+	playerUnits[6].setSoldierPos(0,7);
+	playerUnits[5].setSoldierPos(4,9);
+	playerUnits[4].setSoldierPos(8,8);
+	playerUnits[3].setSoldierPos(3,9);
+	playerUnits[2].setSoldierPos(3,6);
+	playerUnits[1].setSoldierPos(7,8);
+	playerUnits[0].setSoldierPos(2,9);
+};
+
+function TempestDefense(){
+	playerUnits[39].setSoldierPos(8,9);
+	playerUnits[38].setSoldierPos(9,7);
+	playerUnits[37].setSoldierPos(3,8);
+	playerUnits[36].setSoldierPos(6,8);
+	playerUnits[35].setSoldierPos(8,8);
+	playerUnits[34].setSoldierPos(7,9);
+	playerUnits[33].setSoldierPos(9,9);
+	playerUnits[32].setSoldierPos(2,6);
+	playerUnits[31].setSoldierPos(5,6);
+	playerUnits[30].setSoldierPos(9,6);
+	playerUnits[29].setSoldierPos(0,7);
+	playerUnits[28].setSoldierPos(7,7);
+	playerUnits[27].setSoldierPos(8,7);
+	playerUnits[26].setSoldierPos(2,9);
+	playerUnits[25].setSoldierPos(5,9);
+	playerUnits[24].setSoldierPos(2,7);
+	playerUnits[23].setSoldierPos(6,7);
+	playerUnits[22].setSoldierPos(4,8);
+	playerUnits[21].setSoldierPos(1,9);
+	playerUnits[20].setSoldierPos(3,9);
+	playerUnits[19].setSoldierPos(0,6);
+	playerUnits[18].setSoldierPos(4,6);
+	playerUnits[17].setSoldierPos(0,8);
+	playerUnits[16].setSoldierPos(6,9);
+	playerUnits[15].setSoldierPos(7,8);
+	playerUnits[14].setSoldierPos(3,7);
+	playerUnits[13].setSoldierPos(1,8);
+	playerUnits[12].setSoldierPos(4,9);
+	playerUnits[11].setSoldierPos(3,6);
+	playerUnits[10].setSoldierPos(6,6);
+	playerUnits[9].setSoldierPos(4,7);
+	playerUnits[8].setSoldierPos(5,8);
+	playerUnits[7].setSoldierPos(8,6);
+	playerUnits[6].setSoldierPos(9,8);
+	playerUnits[5].setSoldierPos(0,9);
+	playerUnits[4].setSoldierPos(1,6);
+	playerUnits[3].setSoldierPos(5,7);
+	playerUnits[2].setSoldierPos(7,6);
+	playerUnits[1].setSoldierPos(1,7);
+	playerUnits[0].setSoldierPos(2,8);
+}
+</script>
+
+<script language="JavaScript" id="Display">
+  
+function printScore(){
+	var i;
+	
+	var labelText = "";
+	
+	labelText += "S: " + getNumUnitsByRank(1, 0) +"<br/>";
+	for (i = 1; i < 10; i++){
+		labelText += i +": " + getNumUnitsByRank(1, i) +"<br/>";
+	}
+	labelText += "M: " + getNumUnitsByRank(1, 10) +"<br/>";
+	
+	document.getElementById("score_display").innerHTML = "<font style='font-size:150%'>"+labelText+"</font>";
+};
+
+function getNumUnitsByRank(player, rank){
+	var total = 0;
+	switch (rank){
+		case 0:
+			if (player == 0){
+				if (myUnits[0].isAlive) return 1;
+				return 0;
+			}
+			else {
+				if (hisUnits[0].isAlive) return 1;
+				return 0;
+			}
+			break;
+		case 1:
+			if (player == 0){
+				if (myUnits[1].isAlive) return 1;
+				return 0;
+			}
+			else {
+				if (hisUnits[1].isAlive) return 1;
+				return 0;
+			}
+			break;
+		case 2:
+			if (player == 0){
+				if (myUnits[2].isAlive) return 1;
+				return 0;
+			}
+			else {
+				if (hisUnits[2].isAlive) return 1;
+				return 0;
+			}
+			break;
+		case 3:
+			if (player == 0){
+				if (myUnits[3].isAlive) total += 1;
+				if (myUnits[4].isAlive) total += 1;
+				return total;
+			}
+			else {
+				if (hisUnits[3].isAlive) total += 1;
+				if (hisUnits[4].isAlive) total += 1;
+				return total;
+			}
+			break;
+		case 4:
+			if (player == 0){
+				if (myUnits[5].isAlive) total += 1;
+				if (myUnits[6].isAlive) total += 1;
+				if (myUnits[7].isAlive) total += 1;
+				return total;
+			}
+			else {
+				if (hisUnits[5].isAlive) total += 1;
+				if (hisUnits[6].isAlive) total += 1;
+				if (hisUnits[7].isAlive) total += 1;
+				return total;
+			}
+			break;
+		case 5:
+			if (player == 0){
+				if (myUnits[8].isAlive) total += 1;
+				if (myUnits[9].isAlive) total += 1;
+				if (myUnits[10].isAlive) total += 1;
+				if (myUnits[11].isAlive) total += 1;
+				return total;
+			}
+			else {
+				if (hisUnits[8].isAlive) total += 1;
+				if (hisUnits[9].isAlive) total += 1;
+				if (hisUnits[10].isAlive) total += 1;
+				if (hisUnits[11].isAlive) total += 1;
+				return total;
+			}
+			break;
+		case 6:
+			if (player == 0){
+				if (myUnits[12].isAlive) total += 1;
+				if (myUnits[13].isAlive) total += 1;
+				if (myUnits[14].isAlive) total += 1;
+				if (myUnits[15].isAlive) total += 1;
+				return total;
+			}
+			else {
+				if (hisUnits[12].isAlive) total += 1;
+				if (hisUnits[13].isAlive) total += 1;
+				if (hisUnits[14].isAlive) total += 1;
+				if (hisUnits[15].isAlive) total += 1;
+				return total;
+			}
+			break;
+		case 7:
+			if (player == 0){
+				if (myUnits[16].isAlive) total += 1;
+				if (myUnits[17].isAlive) total += 1;
+				if (myUnits[18].isAlive) total += 1;
+				if (myUnits[19].isAlive) total += 1;
+				return total;
+			}
+			else {
+				if (hisUnits[16].isAlive) total += 1;
+				if (hisUnits[17].isAlive) total += 1;
+				if (hisUnits[18].isAlive) total += 1;
+				if (hisUnits[19].isAlive) total += 1;
+				return total;
+			}
+			break;
+		case 8:
+			if (player == 0){
+				if (myUnits[20].isAlive) total += 1;
+				if (myUnits[21].isAlive) total += 1;
+				if (myUnits[22].isAlive) total += 1;
+				if (myUnits[23].isAlive) total += 1;
+				if (myUnits[24].isAlive) total += 1;
+				return total;
+			}
+			else {
+				if (hisUnits[20].isAlive) total += 1;
+				if (hisUnits[21].isAlive) total += 1;
+				if (hisUnits[22].isAlive) total += 1;
+				if (hisUnits[23].isAlive) total += 1;
+				if (hisUnits[24].isAlive) total += 1;
+				return total;
+			}
+			break;
+		case 9:
+			if (player == 0){
+				if (myUnits[25].isAlive) total += 1;
+				if (myUnits[26].isAlive) total += 1;
+				if (myUnits[27].isAlive) total += 1;
+				if (myUnits[28].isAlive) total += 1;
+				if (myUnits[29].isAlive) total += 1;
+				if (myUnits[30].isAlive) total += 1;
+				if (myUnits[31].isAlive) total += 1;
+				if (myUnits[32].isAlive) total += 1;
+				return total;
+			}
+			else {
+				if (hisUnits[25].isAlive) total += 1;
+				if (hisUnits[26].isAlive) total += 1;
+				if (hisUnits[27].isAlive) total += 1;
+				if (hisUnits[28].isAlive) total += 1;
+				if (hisUnits[29].isAlive) total += 1;
+				if (hisUnits[30].isAlive) total += 1;
+				if (hisUnits[31].isAlive) total += 1;
+				if (hisUnits[32].isAlive) total += 1;
+				return total;
+			}
+			break;
+		case 10:
+			if (player == 0){
+				if (myUnits[33].isAlive) total += 1;
+				if (myUnits[34].isAlive) total += 1;
+				if (myUnits[35].isAlive) total += 1;
+				if (myUnits[36].isAlive) total += 1;
+				if (myUnits[37].isAlive) total += 1;
+				if (myUnits[38].isAlive) total += 1;
+				return total;
+			}
+			else {
+				if (hisUnits[33].isAlive) total += 1;
+				if (hisUnits[34].isAlive) total += 1;
+				if (hisUnits[35].isAlive) total += 1;
+				if (hisUnits[36].isAlive) total += 1;
+				if (hisUnits[37].isAlive) total += 1;
+				if (hisUnits[38].isAlive) total += 1;
+				return total;
+			}
+			break;
+	
+	}
+}
+
+
+  </script>
+
+<script language="JavaScript" id="ArtificialIntelligence">
+function decideMove()
+{
+	var max = -20;
+	var planList = new Array(33); //Stores the best option for each unit
+	for (var i = 0; i < 33; i++){ 
+           
+		planList[i] = new movePlan(hisUnits[i]);
+		planList[i].getBestMove();
+		if (max < planList[i].rank) {
+			max = planList[i].rank;
+		}
+	}
+
+	if(max < 0){
+		
+                endGameMsg = msg.createStaticMessage("<font style='font-size:150%'>Computer can't move!  You win!</font>");
+		setGameOver(1); //The game is over, no more turns
+		
+		return;
+	}
+
+	var bestOptions = new Array();
+	for (i =0; i < 33; i++){
+		if (planList[i].rank == max){
+			bestOptions.push(i);
+		}
+	}
+
+	var best = bestOptions[Math.floor(Math.random ( ) * bestOptions.length )]; 
+
+	if (planList[best].direction == 0 ){
+		computerMove(hisUnits[best].x,hisUnits[best].y,hisUnits[best].x,hisUnits[best].y+1);
+	}
+	else if (planList[best].direction == 1 ){
+		computerMove(hisUnits[best].x,hisUnits[best].y,hisUnits[best].x+1,hisUnits[best].y);
+	}
+	else if (planList[best].direction == 2 ){
+		computerMove(hisUnits[best].x,hisUnits[best].y,hisUnits[best].x-1,hisUnits[best].y);
+	}
+	else{
+		computerMove(hisUnits[best].x,hisUnits[best].y,hisUnits[best].x,hisUnits[best].y-1);
+	}
+};
+
+function movePlan(soldier){
+	this.rank = -1; //how good this move is
+	this.direction = -1; //which direction is the best move
+	this.getBestMove = getBestMove; //function that determines the best move, sets rank and direction
+	this.soldier = soldier;//the unit being moved
+};
+
+function getBestMove(){
+	
+	if (this.soldier.isAlive == 0){
+		this.rank = -10;
+		return;
+	}
+
+	var temp;
+	
+	var max = checkMove(this.soldier, this.soldier.x,this.soldier.y+1)+1;
+	this.rank =max;
+	this.direction = 0;
+	
+	temp = checkMove(this.soldier, this.soldier.x+1,this.soldier.y);
+	if ((temp == max)&&(Math.floor(Math.random ( ) * 2 ) <1 ) ){
+		this.direction = 1;
+	}
+	else if (temp > max) {
+		this.rank = temp;
+		this.direction = 1;
+		max = temp;
+	}
+	temp = checkMove(this.soldier, this.soldier.x-1,this.soldier.y);
+	if ((temp == max)&&(Math.floor(Math.random ( ) * 2 ) <1 ) ){
+		this.direction = 2;
+	}
+	else if (temp > max) {
+		this.rank = temp;
+		this.direction = 2;
+		max = temp;
+	}
+	temp = checkMove(this.soldier, this.soldier.x,this.soldier.y-1)-1;
+	if ((temp == max)&&(Math.floor(Math.random ( ) * 2 ) <1 ) ){
+		this.direction = 3;
+	}
+	else if (temp > max) {
+		this.rank = temp;
+		this.direction = 3;
+	}
+
+	if ((this.rank > 4)&&(rankNearbyThreats(this.soldier, this.soldier.x, this.soldier.y)>1)) this.rank++;
+       
+};
+
+function checkMove(unit1, x2,y2){
+	var rank = 0;
+        
+	if (!isValidSpot(x2, y2)) return -5; //cannot move to this location
+	if (board[x2][y2]*board[unit1.x][unit1.y] > 0) return -5; //friendly unit on this location
+	
+	if (board[x2][y2]==0) { //empty spot
+		rank += 7; 
+	}
+	else{ //Running into an opposing player
+		var isOpponentKnown = myUnits[getBoardUnit(board[x2][y2])].isKnown;
+		var hasOpponentMoved = myUnits[getBoardUnit(board[x2][y2])].hasMoved;
+	
+		if ((isOpponentKnown)||(!HasUnknownThreats(unit1.getThisSoldierRank()))){ //AI has attacked this unit before, knows who it is
+			
+                      var fightResult = decideWinner(unit1.value, getBoardUnit(board[x2][y2]) );
+
+			if (fightResult == -1){
+				if (unit1.isKnown) rank += 16;
+				else rank += 14;
+			}
+			else if (fightResult == 0) rank += 8; //Both die, might still be best
+			else  rank += 3; //Lose, but can still move
+		}
+		else{ //AI has not seen this unit before, will have to take it's chances
+			if ( hasOpponentMoved){
+				if (unit1.value != 0) rank += 10;		
+			}
+			else {
+				if (unit1.value > 7) rank += 9;
+				else if (unit1.value > 4) rank += 8;
+				else if (unit1.value > 2) rank += 7;
+				else rank += 4;
+			}
+		}
+	}
+	var threats = rankNearbyThreats(unit1, x2, y2);
+
+	if (threats < 0){ //Not only not threatening, but there are other nice targets!
+		rank += 3;
+	}
+	else if (threats == 0){ //Overall, no threats, position is safe
+		rank += 1;
+	}
+	else { //Position has nearby enemies.
+		if (threats > 2) rank -= 2;
+		else rank -= 1;
+	}
+        
+	return rank;
+};
+
+function rankNearbyThreats(unit1, x2, y2){
+	var rank = 0;
+	rank += rankOneThreat(unit1, x2, y2+1);
+	rank += rankOneThreat(unit1, x2+1, y2);
+	rank += rankOneThreat(unit1, x2-1, y2);
+	rank += rankOneThreat(unit1, x2, y2-1);
+
+	return rank;
+};
+
+function rankOneThreat(unit1, x2, y2){
+	
+	if (isValidSpot(x2, y2)){
+		if(board[x2][y2] > 0){
+			
+			if ((!getUnitInfo(board[x2][y2]).isKnown)&&(HasUnknownThreats(unit1.getThisSoldierRank()))) return Math.floor(Math.random()*3-1);
+			else{
+				if ((unit1.value == 1)&&(board[x2][y2] == 1)) return 10; //special importance for 1 and spy
+				var fightResult = decideWinner(unit1.value,getBoardUnit(board[x2][y2]));
+				if(fightResult == 1) {
+					if (getBoardUnit(board[x2][y2])>32) return 0;
+					if (unit1.isKnown) return 5;
+					return 2;
+				}
+				if (fightResult == 0) return 0;
+				if (fightResult == -2) return -5;//special case for flag
+				return -2;
+			}
+		}
+	}
+	return 0;
+};
+
+
+function HasUnknownThreats(unitval){
+  
+	if (unitval == 0) return true;
+	if ((unitval == 1) && (!myUnits[0].isKnown)) return true;
+	for (var i = 1; i <= getRankListNum(unitval-1); i++){
+		if (!myUnits[i].isKnown) return true;
+	}
+
+	if (unitval == 8) return false;
+	if (difficultyLevel > 1) return false;
+	for (var i = 33; i < 39; i++){
+		if (!myUnits[i].isKnown) return true;
+	}
+	return false;
+};
+
+
+function ForgetUnitRanks(){
+	if (difficultyLevel > 0) return;
+	if ( Math.floor(Math.random() * 5) == 0 ){
+		//AI will see all opponent units
+		for (var i = 0; i < 40; i++){
+			if( (myUnits[i].isKnown) && (Math.floor(Math.random()*2) == 0 ) ){
+				myUnits[i].isKnown = 0;
+				myUnits[i].hasMoved = 0;
+			}
+		}
+	}
+
+};
+
+function SetDifficulty(level){
+ 
+  if ((level > -1)&&(level < 4)) {
+    difficultyLevel = level;
+   }
+}  
+  
+
+function SetMyVisibility(){
+	if (difficultyLevel == 2){ //hard
+		for (var i = 33; i < 40; i++){
+			myUnits[i].isKnown = 1;
+		}
+		myUnits[0].isKnown = 1; //spy location is known
+		myUnits[1].isKnown = 1; //1 location is known
+
+	}
+	else if (difficultyLevel == 3){ //brutal
+		for (var i = 0; i < 40; i++){
+			myUnits[i].isKnown = 1;
+		}
+	}
+};
+
+function computerMove(x1, y1, x2, y2){
+	var source = y1*10+x1;
+	var target = y2*10+x2;
+        
+	if ( decideWinner(getBoardUnit(board[x1][y1]), getBoardUnit(board[x2][y2]) ) == -2){
+                endGameMsg = msg.createStaticMessage("<font style='font-size:150%'>Computer captured the flag! Better luck next time!</font>");
+		setGameOver(1);
+	}
+	else {
+              
+		grid.cells[source].innerHTML = '<span style="font-size:24pt;background-color:yellow">' + GetName(source) + '</b></span>';
+
+		
+		setTimeout("DelayedComputerMove("+x1+","+y1+","+x2+","+y2+")", 500);
+	}
+	
+};
+
+function DelayedComputerMove( x1, y1, x2, y2){
+
+	var moveResult = moveSoldier(x1,y1,x2,y2);
+      
+	if (moveResult == 3) return;
+	var source = y1*10 + x1;
+	var target = y2*10 + x2;
+        
+	
+	if (moveResult == 0){ //basic move works
+		backend.data[target] = backend.data[source];
+		backend.data[source] = 0;	
+	}
+	else if (moveResult == 1){ //defending unit forced forward
+		backend.data[source] = backend.data[target];
+		backend.data[target] = 0;
+	}
+	else if (moveResult == 2){ //mine won, delete attacker but do not move defending mine
+		backend.data[source] = 0;
+		
+	}
+	if (moveResult == -1){ //both locations are blank, everyone died
+		backend.data[source] = 0;
+		backend.data[target] = 0;
+	}
+	backend._IGG_refreshAll();
+}
+
+  </script>
+
+<script language="JavaScript" id="HandleTurns">
+
+var totalTurns = 0;
+var playerTurn = 0; //0 means positive (blue), 1 negative (red)
+var gameOver = false;
+
+function changeTurn(){
+		    setPlayerTurn(1);
+			printScore();
+			setTimeout("ComputerTurn()", 500);
+  
+};
+
+function ComputerTurn(){
+   
+	ForgetUnitRanks(); //AIDifficulty.js, will cause AI to forget some opposing units' ranks
+	decideMove();	
+
+	if (!isGameOver()){
+		setTimeout("FinishComputerTurn()", 550); //The board is refreshed after move.
+	}
+	else {
+	}
+};
+
+
+function FinishComputerTurn(){
+
+ 
+	nextTurn();
+  
+	if(TestCanMove()){ 
+	  printScore();
+	  setPlayerTurn(0);
+        }
+        
+};
+
+function TestCanMove(){
+	if (!CanMove()){
+
+                endGameMsg = msg.createStaticMessage("<font style='font-size:150%'>You can't move!  Better luck next time!</font>");        
+		setGameOver(1); //The game is over, no more turns
+
+		return 0;
+	}
+	return 1;
+};
+
+
+function CanMove(){
+	for (var i = 0; i < 33; i++){
+		if (CanMoveUnit(i)) {
+                    
+                     return true;
+                }
+	}
+
+	return false;
+};
+
+function CanMoveUnit(unitVal){
+	if (myUnits[unitVal].isAlive == 0) return false;
+
+	if ((isValidSpot(myUnits[unitVal].x, myUnits[unitVal].y+1))&&(board[myUnits[unitVal].x][myUnits[unitVal].y+1]==0)) return true;
+	if ((isValidSpot(myUnits[unitVal].x, myUnits[unitVal].y-1))&&(board[myUnits[unitVal].x][myUnits[unitVal].y-1]==0)) return true;
+	if ((isValidSpot(myUnits[unitVal].x+1, myUnits[unitVal].y))&&(board[myUnits[unitVal].x+1][myUnits[unitVal].y]==0)) return true;
+	if ((isValidSpot(myUnits[unitVal].x-1, myUnits[unitVal].y))&&(board[myUnits[unitVal].x-1][myUnits[unitVal].y]==0)) return true;
+
+	return false;
+};  
+
+function nextTurn(){
+	totalTurns++;
+        document.getElementById("num_turns").innerHTML = "<font style='font-size:150%'>"+totalTurns+"</font>";
+};
+
+function getTotalTurns(){
+	return totalTurns;
+};
+
+function setPlayerTurn(turn){
+	playerTurn = turn;
+	//var items = boardArea.contentItems.toArray();
+	if (playerTurn == 0){
+		document.getElementById("game_status").innerHTML = "<font style='font-size:150%'>Go</font>";
+            
+	}
+	else if (playerTurn == 1){
+		document.getElementById("game_status").innerHTML = "<font style='font-size:150%'>Wait</font>";
+	}
+	else {
+		
+		document.getElementById("game_status").innerHTML = "<font style='font-size:150%'>Game-Over</font>";
+	}	
+      backend._IGG_refreshAll();
+};
+
+function SetStartTurn(){
+	playerTurn = 0;
+};
+
+function getPlayerTurn(){
+	return playerTurn;
+};
+
+function setGameOver(over){
+	gameOver = over;
+    setPlayerTurn(-1);
+  backend._IGG_refreshAll();
+};
+
+function isGameOver(){
+	return gameOver;
+};
+  </script>
+
+<script language="JavaScript" id="BoardHelp">
+
+function soldier(num){
+	this.isAlive = 1; //Determines if the unit is still alive and in the game
+	this.isKnown = 0; //if the user has not attacked an enemy unit, the opponent cannot know who this unit is
+	this.hasMoved = 0; //becomes 1 once a unit has moved.  Used for AI to watch for mines
+	this.justMoved = false;
+	this.value = num; //This determines the type of unit-general, mine, spy, etc.
+	this.x = -1; //Current location on the board.
+	this.y = -1;
+
+	this.setSoldierLocation = setSoldierLocation;
+	this.soldierDie = soldierDie;
+	this.getThisSoldierRank = getThisSoldierRank;
+	this.rest = SoldierReset;
+};
+
+function setSoldierLocation(x,y){
+	this.x = x;
+	this.y = y;
+};
+
+function soldierDie(){
+	this.isAlive = 0;
+};
+
+function SoldierReset(){
+	this.isAlive = 1;
+	this. isKnown = 0;
+	this.hasMoved = 0;
+	this.justMoved = false;
+};
+
+function getThisSoldierRank(){
+	if (this.value == 0) return 0; //spy
+	if (this.value == 1) return 1; //general, 1
+	if (this.value == 2) return 2; //2
+	if ((this.value > 2)&&(this.value < 5)) return 3; //3
+	if ((this.value > 4)&&(this.value < 8)) return 4; //4
+	if ((this.value > 7)&&(this.value < 12)) return 5; //5
+	if ((this.value > 11)&&(this.value < 16)) return 6; //6
+	if ((this.value > 15)&&(this.value < 20)) return 7; //7
+	if ((this.value > 19)&&(this.value < 25)) return 8; //8
+	if ((this.value > 24)&&(this.value < 33)) return 9; //9
+	if ((this.value > 32)&&(this.value < 39)) return 10; //mine
+	if (this.value == 39) return 11; //Flag	
+};
+
+function getSoldierRank(value){
+	if (value == 0) return 0; //spy
+	if (value == 1) return 1; //general, 1
+	if (value == 2) return 2; //2
+	if ((value > 2)&&(value < 5)) return 3; //3
+	if ((value > 4)&&(value < 8)) return 4; //4
+	if ((value > 7)&&(value < 12)) return 5; //5
+	if ((value > 11)&&(value < 16)) return 6; //6
+	if ((value > 15)&&(value < 20)) return 7; //7
+	if ((value > 19)&&(value < 25)) return 8; //8
+	if ((value > 24)&&(value < 33)) return 9; //9
+	if ((value > 32)&&(value < 39)) return 10; //mine
+	if (value == 39) return 11; //Flag	
+};
+
+function killSoldier(num, x, y){
+	if (num > 0){ //This is the human player's piece
+		myUnits[num-1].soldierDie();
+	}
+	else{
+		hisUnits[-1-num].soldierDie();
+	}
+	
+	board[x][y] = 0;
+};
+  
+function setVisible(unit){
+	if (unit > 0){
+		myUnits[unit-1].isKnown = 1;
+		myUnits[unit-1].justMoved = true;
+		//for AI. Unless this is a mine, this unit will either move after winning the fight, or die
+		if (getSoldierRank(unit-1) != 10)
+			myUnits[unit-1].hasMoved = 1; 
+	}
+	else {
+		hisUnits[-1-unit].isKnown = 1;
+		hisUnits[-1-unit].justMoved = true;
+		//for AI. Unless this is a mine, this unit will either move after winning the fight, or die
+		if (getSoldierRank(-unit-1) != 10)
+			hisUnits[-1-unit].hasMoved = 1;
+	}
+};
+
+function setHasMoved(unit){
+      
+	if (unit > 0){
+		myUnits[unit-1].hasMoved = 1;
+	}
+	else {
+		hisUnits[-1-unit].hasMoved = 1;
+	}
+}
+
+function getBoard(){
+	return board;
+};
+
+function moveSoldier(x1,y1,x2,y2){
+         
+	var unit = board[x1][y1];
+        
+	setHasMoved(unit); //the AI now knows that this unit has moved
+        
+	if (board[x2][y2] == 0){ //if moving onto a safe spot
+		
+		board[x2][y2] = board[x1][y1];
+		board[x1][y1] = 0;
+		setUnitPosition(unit, x2, y2);
+		return 0;
+	}
+	else{       
+		return fight(unit,x1, y1, board[x2][y2], x2, y2);
+	}
+};
+  
+function fight(unit1, x1, y1, unit2, x2,y2){
+        
+	setVisible(unit1);
+	setVisible(unit2);
+    DisplayLog(y1*10+x1, y2*10+x2);
+	//AddLog(unit1, unit2);
+	var win = decideWinner(getBoardUnit(unit1), getBoardUnit(unit2));
+	if (win==0){ //kill both soldiers
+		killSoldier(unit1,x1, y1);
+		killSoldier(unit2, x2, y2);
+		return -1; //means both are dead
+	}
+	else if (win==-1){ //unit2 was killed
+		killSoldier(unit2,x2,y2);
+		moveSoldier(x1,y1, x2, y2); //unit1 can now move into unit2's spot
+		return 0; //means unit1 won
+	}
+	else if (win==1){ //unit1 was killed
+		killSoldier(unit1,x1,y1);
+		if (getSoldierRank(getBoardUnit(unit2))!=10){ //if defender is a mine, it does not move. otherwise, it moves
+			moveSoldier(x2, y2, x1, y1);
+			return 1;//means unit2 won
+		}
+			
+		return 2; //special case for mines. means unit2 won, but should not be moved
+	}
+	else{
+		//Todo: handle flag capture case
+                endGameMsg = msg.createStaticMessage("<font style='font-size:150%'>You captured the flag!  Congratulations!</font>");
+		setGameOver(1); //The game is over, no more turns
+			if(unit1 > 0){
+				//strYouWin
+                           return 3;
+			}
+			else{
+                            return -3;
+				//(strCompCapture);	
+			}
+		
+		return 3;
+	}
+};
+
+function setUnitPosition(unit, x2, y2){
+	if (unit > 0){
+		myUnits[unit-1].x=x2;
+		myUnits[unit-1].y=y2;
+	}
+	else {
+		hisUnits[-1-unit].x=x2;
+		hisUnits[-1-unit].y=y2;
+	}
+};
+  
+</script>
+
+
+<script language="JavaScript" id="SetupBoard">
+var board; //this is a 2 dimensional array to represent the game board
+var matrixSize; //Stratego games are to be played in 10x10 boards, this should always be initialized to 10
+var myUnits; //An array of the units stored by player1 (person)
+var hisUnits; //An array of the units stored by the computer player
+
+function SetupComputerPlayer(){
+  loadUnits();
+  hisUnits = new Array(40);
+	for (var i = 0; i < 40; i++){
+          var y = playerUnits[i].y;
+          var x = playerUnits[i].x;;
+          hisUnits[i] = new soldier(playerUnits[i].value);
+	  hisUnits[i].setSoldierLocation(x,9-y);
+          
+          board[x][9-y] = -hisUnits[i].value-1;
+          backend.data[(9-y)*10+x] = -hisUnits[i].value-1;
+          
+	}
+}
+
+function SetupHumanPlayer(){
+
+  myUnits = new Array(40);
+	for (var i = 60; i < 100; i++){
+          var y = Math.floor(i/10);
+          var x = i%10;
+		myUnits[board[x][y]-1] = new soldier(board[x][y]-1);
+		myUnits[board[x][y]-1].setSoldierLocation(x,y);
+               
+                 
+		//board[myUnits[i].x][myUnits[i].y] = myUnits[i].value +1;
+	}
+}
+
+function setupBoard(){
+	var i;
+	var j;
+        matrixSize = 10;
+	board = new Array(matrixSize);
+	for (i=0; i < matrixSize; i++)
+	{
+		board[i] = new Array(matrixSize);
+		for (j=0; j < matrixSize; j++)
+		{
+			board[i][j] = 0;                      
+		}
+	} 
+    
+};
+
+function getUnitInfo(unitVal){
+		if (unitVal > 0) return myUnits[unitVal-1];
+		return hisUnits[-1-unitVal];
+};
+
+function getBoardItem(itemNum){
+	var x = itemNum%10;
+	var y = Math.floor(itemNum / 10);
+	return board[x][y];
+};
+
+
+function getRankListNum(value){
+	if (value == 0) return 0; //spy
+	if (value == 1) return 1; //general, 1
+	if (value == 2) return 2; //2
+	if (value == 3) return 4; //3
+	if (value == 4) return 7; //4
+	if (value == 5) return 11; //5
+	if (value == 6) return 15; //6
+	if (value == 7) return 19; //7
+	if (value == 8) return 24; //8
+	if (value == 9) return 32; //9	
+}  
+  
+ </script>  
+  
+ <script language="JavaScript" id="PlayBoard">
+
+function isValidSpot(x, y){
+   
+    if ( (x<0)||(x>9)||(y<0)||(y>9))
+    {
+	return 0;
+    }
+    if (  ( (x==2)||(x==3)||(x==6)||(x==7) ) && ( (y==4)||(y==5) ) )
+    {
+	return 0;
+    }
+   
+    return 1;
+};
+</script>
+
+<script language="JavaScript" id="BoardHelp">
+  function GetName(index){
+    
+    if (!isValidSpot(index % 10, Math.floor(index / 10))) return "X";
+    var unitValue = backend.data[index];
+    if (unitValue == 0) return "_";
+    if (unitValue < 0) {
+      if (hisUnits[getBoardUnit(unitValue)].justMoved){
+        if (getPlayerTurn() == 0 ) hisUnits[getBoardUnit(unitValue)].justMoved = false;
+      }
+      else if(!isGameOver()) return "?";
+    }
+    var val = getSoldierRank(getBoardUnit(unitValue));
+    if (val == 0) return "S";
+    if (val < 10) return val;
+    if (val == 10) return "M";
+    return "F";
+  };
+  
+  function GetSetupName(index){
+    
+    var x = index%10;
+    var y = Math.floor(index/10);
+    if (  ( (x==2)||(x==3)||(x==6)||(x==7) ) && ( (y==0)||(y==1) ) ) return "X";
+    var unitValue = backend.data[index];
+    if (unitValue == 0) return "_";
+    var val = getSoldierRank(getBoardUnit(unitValue));
+    if (val == 0) return "S";
+    if (val < 10) return val;
+    if (val == 10) return "M";
+    return "F";
+  }
+    
+    function GetStyle(index){
+      if (isSetup){
+        if (index < 20) return "font-size:24pt;background-color:lightgrey";
+        if (index > 59) return "font-size:24pt;background-color:#FFD700;color:blue";
+      }
+      
+      if ((!isSetup) && (!isValidSpot(index % 10, Math.floor(index / 10)))) return "font-size:24pt";
+      var unitValue = backend.data[index];
+      if (unitValue == 0) return "font-size:24pt";
+      var bgColor = (isGameOver()) ? "background-color:yellow;" : "";
+      if (unitValue < 0) {
+        return bgColor+"font-size:24pt;color:red";
+      }
+      return bgColor+"font-size:24pt;color:blue";
+    };
+    
+    function GetLog(index){
+      var unitValue = backend.data[index];
+      if (unitValue == 0) return "_";
+      var unit = getBoardUnit(unitValue);
+      if ((unitValue < 0)&& (!hisUnits[unit].justMoved)) return "?"; 
+      var val = getSoldierRank(unit);
+      if (val == 0) return "S";
+      if (val < 10) return val;
+      if (val == 10) return "M";
+      return "F";
+    };
+    
+   function getBoardUnit(unitVal){
+	if (unitVal > 0) return unitVal-1;
+	return -1-unitVal;
+   };
+  
+  function decideWinner(unitAttack, unitDefense)
+{
+	var unit1Rank = getSoldierRank(unitAttack);
+	var unit2Rank = getSoldierRank(unitDefense);
+	
+	if (unit1Rank==11) return 2;
+	if (unit2Rank==11) return -2;
+
+	if (unit1Rank == unit2Rank)
+	{
+		return 0;
+	}
+	if (unit1Rank==0)
+	{
+		if (unit2Rank==1) return -1;
+		return 1;
+	}
+	if (unit2Rank==0)
+	{
+		//if (unit1Rank==1) return 1;
+		return -1; //when a spy is attacked, it loses no matter what
+	}
+	if (unit1Rank == 10)
+	{
+		//winner decided based on whether opponent is a miner (8)
+		if (unit2Rank == 8) return 1;
+		return -1;
+	}
+	if (unit2Rank == 10 )
+	{
+		//winner decided based on whether opponent is a miner (8)
+		if (unit1Rank == 8) return -1;
+		return 1;
+	}
+
+	if (unit1Rank < unit2Rank) return -1;
+	return 1;
+}
+
+function getSoldierRank(value){
+	if (value == 0) return 0; //spy
+	if (value == 1) return 1; //general, 1
+	if (value == 2) return 2; //2
+	if ((value > 2)&&(value < 5)) return 3; //3
+	if ((value > 4)&&(value < 8)) return 4; //4
+	if ((value > 7)&&(value < 12)) return 5; //5
+	if ((value > 11)&&(value < 16)) return 6; //6
+	if ((value > 15)&&(value < 20)) return 7; //7
+	if ((value > 19)&&(value < 25)) return 8; //8
+	if ((value > 24)&&(value < 33)) return 9; //9
+	if ((value > 32)&&(value < 39)) return 10; //mine
+	if (value == 39) return 11; //Flag	
+};
+</script>
+    
+<script language="JavaScript" id="Startup">
+
+var backend = new Object();
+backend.data = new Array(100);
+  setupBoard();
+  DisplaySetup();
+  
+
+</script>
+
+<script language="JavaScript" id="MainScript">
+
+backend._IGG_getNormalView = function(index) {
+  var cursorStyle = '';
+  if ((this.data[index] < 1) || (getPlayerTurn()==1)) cursorStyle = 'cursor:default;';
+  
+  if (isSetup) {
+    return '<span style='+cursorStyle+''+GetStyle(index)+'>' + GetSetupName(index) + '</span>';
+  }
+  return '<span style='+cursorStyle+''+GetStyle(index)+'>' + GetName(index) + '</span>';
+}
+backend._IGG_isDragSource = function(index) {
+  if (isSetup) return (this.data[index] > 0);
+  return ((getPlayerTurn()==0) && (this.data[index] > 0) && (this.data[index] < 34) && (!isGameOver()));
+}
+backend._IGG_isDragTarget = function(index, sourceIndex) {
+  if (isSetup ) return ((index > 19 )&&(this.data[index] ==0 ));
+  
+  var x = index % 10;
+  var y = Math.floor(index / 10);
+  if (!isValidSpot(x, y)) return false;
+  
+  if (this.data[index]*this.data[sourceIndex] <= 0){  
+    var x2 = sourceIndex % 10;
+    var y2 = Math.floor(sourceIndex / 10);
+    if ((Math.abs(x2-x) == 1) && (y2-y == 0)) return true;
+    if ((Math.abs(y2-y) == 1) && (x2-x == 0)) return true;
+  }
+  return false;
+}
+
+
+backend._IGG_getSurrogateView = function(index) {
+  
+  return '<span style="font-size:24pt"><b>' + GetName(index) + '<b></span>';
+}
+
+backend._IGG_getSourceView = function(source, target) {
+  
+  if (target == -1) {
+    return '<span style="font-size:24pt;color:#888888">' + GetName(source) + '</b></span>';
+  } else {
+    if (isSetup) return '<span style='+GetStyle(index)+'>' + GetSetupName(index) + '</span>';
+    return '<span style="font-size:24pt;">' + GetName(source) + '</b></span>';
+  }
+}
+
+backend._IGG_getPossibleTargetView = function(target, source) {
+  if (isSetup) {
+    if (target > 59) return '<span style="font-size:24pt;background-color:#FFD700">' + GetSetupName(target) + '</span>';
+    return '<span style="font-size:24pt;background-color:yellow">' + GetSetupName(target) + '</span>';
+  }
+
+  return '<span style="font-size:24pt;background-color:yellow">' + GetName(target) + '</b></span>';
+}
+
+backend._IGG_getDragView = function(target, source) {
+  if (isSetup) return '<span style=cursor:default;'+GetStyle(target)+'>' + GetSetupName(target) + '</span>';
+  return '<span style='+GetStyle(target)+'>' + GetName(target) + '</b></span>';
+}
+backend._IGG_getTargetView = function(target, source) {
+  if (isSetup) return '<span style="font-size:24pt;color:#00A000">' + GetSetupName(target) + '</span>';
+  return '<span style="font-size:24pt;color:#00A000;">' + GetName(target) + '</b></span>';
+}
+
+backend._IGG_handleClick = function(source) {
+}
+
+backend._IGG_handleDragStart = function(source) { 
+}
+
+backend._IGG_handleDrag = function(source, target) {
+  
+  if (target == -1) {
+    this._IGG_refreshCell(source);
+  } else {
+       if (isSetup){
+         this.data[target] = this.data[source];
+         this.data[source] = 0;
+         board[target%10][Math.floor(target/10)] = board[source%10][Math.floor(source/10)];
+         board[source%10][Math.floor(source/10)] = 0;
+         this._IGG_refreshAll();
+         return;
+       }
+     
+        var fightResult = moveSoldier( source%10, Math.floor(source/10), target%10, Math.floor(target/10));
+        if (fightResult == 0){
+          this.data[target] = this.data[source];
+          this.data[source] = 0;
+        }
+        else if (fightResult == -1){
+          this.data[target] = 0;
+          this.data[source] = 0;
+        }
+        else if (fightResult == 1){
+          this.data[source] = this.data[target];
+          this.data[target] = 0;
+        }
+        else if (fightResult == 2){
+          this.data[source] = 0;
+        }
+        else if (fightResult == 3){
+          document.getElementById("game_status").innerHTML = "<font style='font-size:150%'>You win!</font>";
+        }
+        else {
+           document.getElementById("game_status").innerHTML = "Better luck next time!";
+        }
+     
+    if(!isGameOver()) changeTurn();
+    else this._IGG_refreshAll();
+  }
+}
+
+var grid = new _IG_Grid(backend, "mygrid", 10, 10);
+grid.getTable().border = 2;
+grid.getTable().cellPadding = 0;
+_gel("grid_table").appendChild(grid.getTable());
+grid.initDragging();
+
+</script>
+
+  ]]>
+  
+  </Content>
+  
+  <Content type="html" view="home">
+    
+     <![CDATA[
+     
+      <script type="text/javascript">
+  
+    function goToView(dest) {
+      var supported_views = gadgets.views.getSupportedViews();
+   
+      var reqres = gadgets.views.requestNavigateTo(supported_views[dest]);
+       
+        if (gadgets.views.getCurrentView().getName() == "HOME"){
+           //user cannot go to canvas - do something else
+        }   
+        };
+   </script>
+     
+     
+<div align="center">Welcome to Strategy Chess! 
+
+<br/> <br/><img src="http://www.jeremyglassenberg.com/StrategyChess.gif" />                                                                              
+<br/><br/><button type="button" onClick="goToView('canvas')">Start Game</button>
+   
+</div>
+
+
+     ]]>
+  </Content>
+</Module>
+
+
+
+
+
+
+
