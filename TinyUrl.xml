@@ -1,0 +1,9 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+<ModulePrefs title="TinyURL" title_url="http://www.tinyurl.com/" description="make a smaller URL that will work for any page" author="Jeremy Glassenberg" author_email="GoogleGadgets@jeremyglassenberg.com" screenshot="http://www.jeremyglassenberg.com/TinyURL.png" thumbnail="http://www.jeremyglassenberg.com/tinyURL.ico" height="170">
+  </ModulePrefs>
+  
+<Content type="url" href="http://www.jeremyglassenberg.com/tinyURL.html"></Content>
+
+</Module>
