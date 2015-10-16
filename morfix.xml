@@ -1,0 +1,180 @@
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+<ModulePrefs title="__MSG_title__" title_url="http://www.morfix.co.il/" description="__MSG_description__" author="Jeremy Glassenberg" author_email="GoogleGadgets@jeremyglassenberg.com" author_location="Pittsburgh, PA" author_affiliation="Carnegie Mellon MBA Candidate" screenshot="http://www.morfix.co.il/morfixheb.jpg" thumbnail="http://www.morfix.co.il/morfixheb.jpg" scrolling="true" height="94">
+ <Locale messages="http://www.jeremyglassenberg.com/morfix_bundle_default.xml"/>
+<Locale lang="iw" messages="http://www.jeremyglassenberg.com/morfix_bundle_heb.xml" />
+<Require feature="dynamic-height"/>
+</ModulePrefs>
+<Content type="html">
+	<![CDATA[ 
+	<SCRIPT LANGUAGE="JAVASCRIPT">
+<!--
+var imgOn = 'post' 
+	 function setimgOn(set)
+	 {
+		imgOn = set
+	 }
+	
+function GetAction()
+{
+	form1.action = "http://www.morfix.co.il/defaultp.asp"
+
+      var radioSelect="103";
+
+      if (_gel("RadioButtonExpSyn").checked){
+          radioSelect="106";
+      }
+      else if (_gel("RadioButtonMorphological").checked){
+          radioSelect="101";
+
+      }
+      else if (_gel("RadioButtonExact").checked){
+          radioSelect="104";
+
+      }
+
+	if (imgOn == 'get')  // dictionary
+	{
+	   	    	   	   	 
+		if(form1.q.value)
+		    form1.action = "http://milon.morfix.co.il/?q="+form1.q.value;
+		else
+			form1.action = "http://milon.morfix.co.il/MorDictFirstPage.htm"		
+			form1.method = 'get'
+			
+	}
+	if(imgOn == 'post')
+	{
+        
+			form1.action = "http://www.morfix.co.il/Default.aspx?matchMode="+radioSelect+"&q="+form1.q.value;	//search
+			form1.method = 'post'
+			}
+}
+
+/* 
+ * Shows the Keyboard window 
+ */
+function showKeyboard() 
+{
+
+//_gel("divkeyboard").innerHTML = _gel("keyboard").innerHTML.substr(4,_gel("keyboard").innerHTML.length-8);
+if (_gel("keyboard").style.display == ""){
+  _gel("keyboard").style.display = "none";
+}
+else{
+  _gel("keyboard").style.display = "";
+}
+//_gel("keyboardToggle").onclick = "closeKeyboard()";
+_IG_AdjustIFrameHeight();
+
+}
+
+function setStr(str)
+{
+//alert(document.form1)
+  document.form1.q.value+=str
+
+}
+
+function del()
+{
+	var str
+
+	var Len = document.form1.q.value.length
+	str = document.form1.q.value.substring(0,Len- 1)
+
+	document.form1.q.value = str
+
+}
+
+function toggleMode(){
+  if(document.form1.target == "_blank"){
+    document.form1.target = "_top";
+  }
+  else {
+    document.form1.target = "_blank";
+  }
+}
+
+
+//-->
+</SCRIPT>
+	
+	
+        <form     Onsubmit=GetAction()  id=form1 name=form1 target= "_top">
+        <input type="checkbox" onclick="toggleMode();"> &#1502;&#1511;&#1500;&#1491;&#1514; <input type="checkbox" onclick="showKeyboard();"> &#1495;&#1508;&#1513; &#1489;&#1495;&#1500;&#1493;&#1503; &#1495;&#1491;&#1513; <br/>	
+<input type="submit" name="ButtonMilonMorfix" value="&#1514;&#1512;&#1490;&#1493;&#1501;" onclick="setimgOn('get');" id="ButtonMilonMorfix" style="width:42px;" />
+		<input type="submit" name="ButtonSearch" value="&#1495;&#1497;&#1508;&#1493;&#1513;" onclick="setimgOn('post');" id="ButtonSearch" style="width:43px;" />
+            	
+		<INPUT name=q dir=rtl SIZE=10 MAXLENGTH=100   style="HEIGHT: 22px; LEFT: 208px; TOP: 143px; WIDTH: 200px" > <br>         
+
+ 
+            <span class="rbtest" title="&#x5DE;&#x5D9;&#x5DC;&#x5EA; &#x5D4;&#x5D7;&#x5D9;&#x5E4;&#x5D5;&#x5E9;, &#x5DB;&#x5DC; &#x5E0;&#x5D8;&#x5D9;&#x5D5;&#x5EA;&#x5D9;&#x5D4; &#x5D5;&#x5DB;&#x5DF; &#x5DE;&#x5D9;&#x5DC;&#x5D9;&#x5DD; &#x5E0;&#x5E8;&#x5D3;&#x5E4;&#x5D5;&#x5EA;. &#x5DE;&#x5E7;&#x5DC;&#x5D9;&#x5D3;&#x5D9;&#x5DD;: &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5DF; &#x5D5;&#x5DE;&#x5E7;&#x5D1;&#x5DC;&#x5D9;&#x5DD;: &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5DF;, &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5E0;&#x5D9;&#x5DD;, &#x5DE;&#x5D2;&#x5D0;&#x5D6;&#x5D9;&#x5DF;, &#x5D6;'&#x5D5;&#x5E8;&#x5E0;&#x5DC;, &#x5D1;&#x5D9;&#x5D8;&#x5D0;&#x5D5;&#x5DF; &#x5D5;&#x5DB;&#x5D5;'." style="color:Crimson;font-family:Arial,sans-serif;font-size:10pt;font-weight:bold;"><input id="RadioButtonSynonym" type="radio" name="MatchMode" value="RadioButtonSynonym" checked="checked"/><label for="RadioButtonSynonym"> &#x5DE;&#x5D5;&#x5E8;&#x5E4;&#x5D5;&#x5DC;&#x5D5;&#x5D2;&#x5D9;</label></span>
+            <span class="rbtest" title="&#x5DE;&#x5D9;&#x5DC;&#x5EA; &#x5D4;&#x5D7;&#x5D9;&#x5E4;&#x5D5;&#x5E9;, &#x5DE;&#x5D9;&#x5DC;&#x5D9;&#x5DD; &#x5D1;&#x5E2;&#x5DC;&#x5D5;&#x5EA; &#x5E9;&#x5D5;&#x5E8;&#x5E9; &#x5D6;&#x5D4;&#x5D4; &#x5D5;&#x5DE;&#x5E9;&#x5DE;&#x5E2;&#x5D5;&#x5EA; &#x5E7;&#x5E8;&#x5D5;&#x5D1;&#x5D4; &#x5D5;&#x5DE;&#x5D9;&#x5DC;&#x5D9;&#x5DD; &#x5E0;&#x5E8;&#x5D3;&#x5E4;&#x5D5;&#x5EA;. &#x5DE;&#x5E7;&#x5DC;&#x5D9;&#x5D3;&#x5D9;&#x5DD;: &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5DF; &#x5D5;&#x5DE;&#x5E7;&#x5D1;&#x5DC;&#x5D9;&#x5DD;: &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5DF;, &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5E0;&#x5D9;&#x5DD;, &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5E0;&#x5D5;&#x5EA;, &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5E0;&#x5D0;&#x5D9; , &#x5D6;'&#x5D5;&#x5E8;&#x5E0;&#x5DC;, &#x5D1;&#x5D9;&#x5D8;&#x5D0;&#x5D5;&#x5DF; &#x5D5;&#x5DB;&#x5D5;'." style="color:#FF8000;font-family:Arial,sans-serif;font-size:10pt;font-weight:bold;"><input id="RadioButtonExpSyn" type="radio" name="MatchMode" value="RadioButtonExpSyn"  /><label for="RadioButtonExpSyn"> &#x5DE;&#x5D5;&#x5E8;&#x5D7;&#x5D1;</label></span>
+            <span class="rbtest" title="&#x5DE;&#x5D9;&#x5DC;&#x5EA; &#x5D4;&#x5D7;&#x5D9;&#x5E4;&#x5D5;&#x5E9;, &#x5D5;&#x5DB;&#x5DC; &#x5E6;&#x5D5;&#x5E8;&#x5D5;&#x5EA; &#x5D4;&#x5E0;&#x5D8;&#x5D9;&#x5D9;&#x5D4; &#x5E9;&#x5DC;&#x5D4;.  &#x5DE;&#x5E7;&#x5DC;&#x5D9;&#x5D3;&#x5D9;&#x5DD;: &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5DF; &#x5D5;&#x5DE;&#x5E7;&#x5D1;&#x5DC;&#x5D9;&#x5DD;: &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5DF;, &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5E0;&#x5D9;&#x5DD;, &#x5D5;&#x5D4;&#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5DF; &#x5D5;&#x5DB;&#x5D5;'." style="color:ForestGreen;font-family:Arial,sans-serif;font-size:10pt;font-weight:bold;"><input id="RadioButtonMorphological" type="radio" name="MatchMode" value="RadioButtonMorphological" /><label for="RadioButtonMorphological"> &#x5DE;&#x5E6;&#x5D5;&#x5DE;&#x5E6;&#x5DD;</label></span>
+            <span class="rbtest" title="&#x5DE;&#x5D9;&#x5DC;&#x5D5;&#x5EA; &#x5D4;&#x5D7;&#x5D9;&#x5E4;&#x5D5;&#x5E9;, &#x5D1;&#x5D3;&#x5D9;&#x5D5;&#x5E7; &#x5DB;&#x5E4;&#x5D9; &#x5E9;&#x5D4;&#x5D5;&#x5E7;&#x5DC;&#x5D3;&#x5D5;.  &#x5DE;&#x5E7;&#x5DC;&#x5D9;&#x5D3;&#x5D9;&#x5DD; :&#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5DF; &#x5DE;&#x5E7;&#x5D1;&#x5DC;&#x5D9;&#x5DD;: &#x5E2;&#x5D9;&#x5EA;&#x5D5;&#x5DF;." style="color:Indigo;font-family:Arial,sans-serif;font-size:10pt;font-weight:bold;"><input id="RadioButtonExact" type="radio" name="MatchMode" value="RadioButtonExact" /><label for="RadioButtonExact"> &#x5DB;&#x5E4;&#x5D9; &#x5E9;&#x5D4;&#x5D5;&#x5E7;&#x5DC;&#x5D3;</label></span>
+
+		 </FORM>
+
+<div id="divkeyboard"></div>
+	
+	<div id="keyboard" style="display:none;">
+  
+<table     bgcolor = "lightgrey" width ="44%"><tr width = "100%">
+<td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value='"' onclick= "setStr('.')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="'" onclick= "setStr('.')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1511;" onclick= "setStr('&#1511;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1512;" onclick= "setStr('&#1512;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1488;" onclick= "setStr('&#1488;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1496;" onclick= "setStr('&#1496;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1493;" onclick= "setStr('&#1493;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1503;" onclick= "setStr('&#1503;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1501;" onclick= "setStr('&#1501;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1508;" onclick= "setStr('&#1508;')"></td>
+
+ </tr>
+<tr>
+<td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1513;" onclick= "setStr('&#1513;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1491;" onclick= "setStr('&#1491;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1490;" onclick= "setStr('&#1490;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1499;" onclick= "setStr('&#1499;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1506;" onclick= "setStr('&#1506;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1497;" onclick= "setStr('&#1497;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1495;" onclick= "setStr('&#1495;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1500;" onclick= "setStr('&#1500;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1498;" onclick= "setStr('&#1498;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1507;" onclick= "setStr('&#1507;')"></td>
+ </tr>
+<tr>
+<td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1494;" onclick= "setStr('&#1494;')" ></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1505;" onclick= "setStr('&#1505;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1489;" onclick= "setStr('&#1489;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1492;" onclick= "setStr('&#1492;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1504;" onclick= "setStr('&#1504;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1502;" onclick= "setStr('&#1502;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1510;" onclick= "setStr('&#1510;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1514;" onclick= "setStr('&#1514;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="&#1509;" onclick= "setStr('&#1509;')"></td>
+ <td><INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 21px" type=button value="." onclick= "setStr('.')"></td>
+</tr>
+</table>
+
+<tr>
+
+<table bgcolor = "lightgrey"  align = middle><tr><td width =18px > </td><td><INPUT width = "70px" id=button1 name=button1 style="HEIGHT: 16px; WIDTH: 170px" type=button  onclick= "setStr(' ')">
+</td> <td width =15px > </td><td> <INPUT id=button1 name=button1 style="HEIGHT: 24px; WIDTH: 30px" type=button  onclick= "del()" value = Del></td></tr></table>&nbsp;
+
+
+
+
+</TABLE>  </div>
+
+<script language="javascript">
+_IG_AdjustIFrameHeight();
+  
+  </script>
+     ]]>
+	 </Content>
+</Module>
+
