@@ -1,0 +1,9 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+<ModulePrefs title="Shrink File" title_url="http://www.shrinkfile.net/" description="Online file compressor.  Zip a file from any computer you're on, right on your homepage!" author="Jeremy Glassenberg" author_email="GoogleGadgets@jeremyglassenberg.com" screenshot="http://www.jeremyglassenberg.com/shrinkfile_scrnshot.PNG" thumbnail="http://www.jeremyglassenberg.com/shrinkfile_thumb.PNG" height="60" scaling="false" >
+  </ModulePrefs>
+  
+<Content type="url" href="http://www.jeremyglassenberg.com/shrinkfile.html"></Content>
+
+</Module>
