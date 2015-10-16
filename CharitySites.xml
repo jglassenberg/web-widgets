@@ -1,0 +1,23 @@
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+<ModulePrefs title="TheCharitySites" title_url="http://www.thehungersite.com/" description="Links to charity sites.  Clicking on these links automatically donates to charity" author="Jeremy Glassenberg" author_email="GoogleGadgets@jeremyglassenberg.com" author_location="Pittsburgh, PA" author_affiliation="Carnegie Mellon MBA Candidate" screenshot="http://imageserv01.yss4.com/images/cache/0x8f1b441939f0ab7acefdd0cc.gif" thumbnail="http://imageserv01.yss4.com/images/cache/0xf3632796437283bfc0a80a36.gif" scrolling="true" height="200"/>
+<Content type="html">
+	<![CDATA[ 
+	<FONT FACE="arial, helvetica, sans-serif" size="-1"><A  target="_blank" href="http://www.thehungersite.com/cgi-bin/WebObjects/CTDSites.woa/74/wo/bi2000AO7001G600P4/0.0.47.7.0.1.0.0.0.CustomContentActiveImageDisplayComponent.0.0.0" ><IMG alt="Give Free Food" height="47" width="180" border="0" src="http://imageserv01.yss4.com/images/cache/0xf3632796437283bfc0a80a36.gif"></a>
+	<FONT FACE="arial, helvetica, sans-serif" size="-1"><A target="_blank" href="http://www.thebreastcancersite.com/cgi-bin/WebObjects/CTDSites.woa/74/wo/bi2000AO7001G600P4/10.0.47.7.0.1.0.1.0.CustomContentActiveImageDisplayComponent.0.0.0" ><IMG alt="Give Free Food" height="47" width="180" border="0" src="http://imageserv01.yss4.com/images/cache/0x8bc9379643728318c0a80a36.gif"></a><br>
+	
+
+<FONT FACE="arial, helvetica, sans-serif" size="-1"><A  target="_blank" href="http://www.thechildhealthsite.com/cgi-bin/WebObjects/CTDSites.woa/74/wo/bi2000AO7001G600P4/10.0.47.7.0.1.0.1.0.CustomContentActiveImageDisplayComponent.0.0.0" ><IMG alt="Give Free Food" height="47" width="180" border="0" src="http://imageserv01.yss4.com/images/cache/0xfd3927da4372845bc0a80a36.gif"></a>
+<FONT FACE="arial, helvetica, sans-serif" size="-1"><A target="_blank" href="http://www.theliteracysite.com/cgi-bin/WebObjects/CTDSites.woa/74/wo/bi2000AO7001G600P4/10.0.47.7.0.1.0.1.0.CustomContentActiveImageDisplayComponent.0.0.0" ><IMG alt="Give Free Food" height="47" width="180" border="0" src="http://imageserv01.yss4.com/images/cache/0xd75527e44372863cc0a80a36.gif"></a><br>
+
+<FONT FACE="arial, helvetica, sans-serif" size="-1"><A  target="_blank" href="http://www.therainforestsite.com/cgi-bin/WebObjects/CTDSites.woa/74/wo/bi2000AO7001G600P4/10.0.47.7.0.1.0.1.0.CustomContentActiveImageDisplayComponent.0.0.0" ><IMG alt="Give Free Food" height="47" width="180" border="0" src="http://imageserv01.yss4.com/images/cache/0xe0d827a043728522c0a80a36.gif"></a>
+<FONT FACE="arial, helvetica, sans-serif" size="-1"><A  target="_blank" href="http://www.theanimalrescuesite.com/cgi-bin/WebObjects/CTDSites.woa/74/wo/bi2000AO7001G600P4/10.0.47.7.0.1.0.1.0.CustomContentActiveImageDisplayComponent.0.0.0" ><IMG alt="Give Free Food" height="47" width="180" border="0" src="http://imageserv01.yss4.com/images/cache/0xb60227c9437285bbc0a80a36.gif"></a><br>
+
+
+
+     ]]>
+	 
+	 </Content>
+</Module>
+
